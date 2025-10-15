@@ -43,5 +43,10 @@ Deploy as a web application using Streamlit or Flask.
 
 ---
 
+## 🌐 Live Demo
+https://jahnaviponna.github.io/resume-screening-assistant/
+
+---
+
 ## 👤 Author
 Developed by: P Jahnavi Sushma Priya
