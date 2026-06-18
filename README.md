@@ -287,6 +287,14 @@ This is expected. The AI model is downloaded and cached during the first executi
 
 ---
 
+## 🌐 Live Demo
+
+**Try the application here:**  
+
+👉 https://jahnaviponna.github.io/resume-screening-assistant/
+
+---
+
 # 👩‍💻 Author
 
 **Jahnavi Sushma Priya Ponna**
