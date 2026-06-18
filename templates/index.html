@@ -1,110 +1,602 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Resume Classifier</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { background: #f7f7f7; }
-        .container { margin-top: 50px; }
-        .card { border-radius: 16px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-        #visual, #spinnerAnalyze, #spinnerChart { display: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Classifier</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-light: #eef0fd;
+      --success: #2dc653;
+      --danger: #e63946;
+      --warning: #f4a261;
+      --surface: #ffffff;
+      --bg: #f1f3fb;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(67,97,238,0.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── Header ─────────────────────────── */
+    .app-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .app-header h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.3rem;
+    }
+    .app-header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    /* ── Cards ──────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ── Upload zone ────────────────────── */
+    .drop-zone {
+      border: 2px dashed var(--primary);
+      border-radius: 10px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s;
+      background: var(--primary-light);
+      position: relative;
+    }
+    .drop-zone:hover { background: #dce1fc; }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .drop-zone .drop-icon {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .drop-zone p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .drop-zone strong { color: var(--primary); }
+    #fileList { margin-top: 1rem; }
+    .file-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      margin: 3px;
+      font-weight: 500;
+    }
+
+    /* ── Buttons ────────────────────────── */
+    .btn-primary-custom {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.6rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-primary-custom:hover { opacity: 0.88; }
+    .btn-primary-custom:active { transform: scale(0.98); }
+    .btn-primary-custom:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-outline-custom {
+      background: transparent;
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+      border-radius: 8px;
+      padding: 0.55rem 1.4rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .btn-outline-custom:hover { background: var(--primary-light); }
+
+    /* ── Progress / Spinner ─────────────── */
+    .spinner-wrap {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 22px; height: 22px;
+      border: 3px solid #c7d0f7;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Summary bar ────────────────────── */
+    #summaryBar {
+      display: none;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .stat-badge {
+      flex: 1;
+      background: var(--primary-light);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      text-align: center;
+    }
+    .stat-badge .val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .stat-badge .lbl { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── Results table ──────────────────── */
+    #resultsWrap { display: none; }
+    .results-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .results-table th {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+      padding: 0.65rem 0.9rem;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+    }
+    .results-table td {
+      padding: 0.65rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .results-table tr:last-child td { border-bottom: none; }
+    .results-table tr:hover td { background: #f8f9ff; }
+
+    /* Confidence pill */
+    .conf-pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .conf-high  { background: #d4f7e0; color: #1a7a3c; }
+    .conf-mid   { background: #fff3cd; color: #8a5f00; }
+    .conf-low   { background: #fde8e8; color: #b91c1c; }
+
+    /* Role badge */
+    .role-badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    /* Top-3 dropdown */
+    .top3-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline dotted;
+    }
+    .top3-list {
+      display: none;
+      margin-top: 4px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .top3-list.open { display: block; }
+
+    /* ── Chart section ──────────────────── */
+    #chartSection { display: none; }
+    #chartWrap {
+      position: relative;
+      width: 100%;
+      height: 320px;
+    }
+
+    /* ── Action bar ────────────────────── */
+    .action-bar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    /* ── Toast ──────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #1e293b;
+      color: #fff;
+      padding: 0.7rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; }
+  </style>
 </head>
 <body>
+<div class="page-wrap">
 
-<div class="container">
-    <div class="card p-4">
-        <h2 class="text-center">📄 Resume Classifier using LLMs</h2>
-        
-        <form id="resumeForm" enctype="multipart/form-data">
-            <label class="form-label mt-3">Upload Resumes (PDFs):</label>
-            <input class="form-control" type="file" name="resumes" multiple required>
-            <button class="btn btn-primary mt-3" type="submit">Analyze</button>
-        </form>
+  <!-- Header -->
+  <div class="app-header">
+    <h1>📄 Resume Classifier</h1>
+    <p>AI-powered resume screening — upload PDF or Word documents</p>
+  </div>
 
-        <div id="spinnerAnalyze" class="text-center mt-3">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p>Analyzing resumes...</p>
-        </div>
-
-        <div id="status" class="alert alert-success mt-3" style="display:none;">
-            ✅ Analysis done!
-        </div>
-
-        <button id="showChart" class="btn btn-success mt-3" style="display:none;">Visualize Results</button>
-
-        <div id="spinnerChart" class="text-center mt-3">
-            <div class="spinner-border text-success" role="status"></div>
-            <p>Generating chart...</p>
-        </div>
-
-        <button class="btn btn-outline-secondary mt-3" onclick="downloadCSV()">⬇ Download CSV</button>
-
-        <canvas id="visual" class="mt-4"></canvas>
+  <!-- Upload card -->
+  <div class="card">
+    <div class="card-title">📂 Upload Resumes</div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" name="resumes" multiple accept=".pdf,.docx,.doc">
+      <span class="drop-icon">📎</span>
+      <strong>Click to browse or drag &amp; drop</strong>
+      <p>Supports PDF, DOCX, DOC &nbsp;·&nbsp; Multiple files allowed</p>
     </div>
+    <div id="fileList"></div>
+
+    <div class="action-bar">
+      <button class="btn-primary-custom" id="analyzeBtn" disabled onclick="analyzeResumes()">
+        Analyze Resumes
+      </button>
+      <button class="btn-outline-custom" onclick="clearAll()">Clear</button>
+    </div>
+
+    <div class="spinner-wrap" id="spinnerAnalyze">
+      <div class="spinner"></div>
+      <span id="spinnerMsg">Analyzing resumes, please wait…</span>
+    </div>
+  </div>
+
+  <!-- Results card -->
+  <div class="card" id="resultsWrap">
+    <div class="card-title">📊 Classification Results</div>
+
+    <!-- Summary stats -->
+    <div style="display:flex; gap:1rem; margin-bottom:1.2rem; flex-wrap:wrap;" id="summaryBar">
+      <div class="stat-badge">
+        <div class="val" id="statTotal">0</div>
+        <div class="lbl">Total Resumes</div>
+      </div>
+      <div class="stat-badge">
+        <div class="val" id="statRoles">0</div>
+        <div class="lbl">Unique Roles</div>
+      </div>
+      <div class="stat-badge">
+        <div class="val" id="statAvgConf">0%</div>
+        <div class="lbl">Avg Confidence</div>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="results-table" id="resultsTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>File</th>
+            <th>Predicted Role</th>
+            <th>Confidence</th>
+            <th>Keywords Matched</th>
+            <th>Top 3 Matches</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="action-bar" style="margin-top:1.25rem;">
+      <button class="btn-primary-custom" onclick="showChart()">📈 Visualize Chart</button>
+      <button class="btn-outline-custom" onclick="downloadCSV()">⬇ Download CSV</button>
+    </div>
+
+    <div class="spinner-wrap" id="spinnerChart">
+      <div class="spinner"></div>
+      <span>Generating chart…</span>
+    </div>
+  </div>
+
+  <!-- Chart card -->
+  <div class="card" id="chartSection">
+    <div class="card-title">📉 Role Distribution</div>
+    <div id="chartWrap">
+      <canvas id="chartCanvas" role="img" aria-label="Bar chart showing count of resumes per job role"></canvas>
+    </div>
+  </div>
+
 </div>
 
+<!-- Toast -->
+<div id="toast"></div>
+
 <script>
-document.getElementById('resumeForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const form = new FormData(this);
-    
-    // Show spinner while analyzing
-    document.getElementById('spinnerAnalyze').style.display = 'block';
-    document.getElementById('status').style.display = 'none';
-    document.getElementById('visual').style.display = 'none';
+// ── State ─────────────────────────────────────────────────────────────────────
+let chartInstance = null;
 
-    fetch('/analyze', {
-        method: 'POST',
-        body: form
-    })
-    .then(res => res.json())
+// ── File input ────────────────────────────────────────────────────────────────
+const fileInput  = document.getElementById('fileInput');
+const fileList   = document.getElementById('fileList');
+const analyzeBtn = document.getElementById('analyzeBtn');
+
+fileInput.addEventListener('change', renderFileChips);
+
+function renderFileChips() {
+  const files = Array.from(fileInput.files);
+  if (files.length === 0) {
+    fileList.innerHTML = '';
+    analyzeBtn.disabled = true;
+    return;
+  }
+  fileList.innerHTML = files.map(f =>
+    `<span class="file-chip">📄 ${f.name}</span>`
+  ).join('');
+  analyzeBtn.disabled = false;
+}
+
+// Drag-and-drop support
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.background = '#dce1fc'; });
+dropZone.addEventListener('dragleave', () => { dropZone.style.background = ''; });
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.style.background = '';
+  const dt = e.dataTransfer;
+  if (dt.files.length) {
+    fileInput.files = dt.files;
+    renderFileChips();
+  }
+});
+
+// ── Analyze ───────────────────────────────────────────────────────────────────
+function analyzeResumes() {
+  const files = fileInput.files;
+  if (!files.length) { toast('Please select at least one file.'); return; }
+
+  const form = new FormData();
+  Array.from(files).forEach(f => form.append('resumes', f));
+
+  // UI state
+  document.getElementById('spinnerAnalyze').style.display = 'flex';
+  document.getElementById('resultsWrap').style.display = 'none';
+  document.getElementById('chartSection').style.display = 'none';
+  analyzeBtn.disabled = true;
+
+  // Animate spinner message
+  const msgs = ['Extracting text…', 'Running semantic matching…', 'Scoring keyword coverage…', 'Finalizing classifications…'];
+  let mi = 0;
+  const msgEl = document.getElementById('spinnerMsg');
+  const msgTimer = setInterval(() => { mi = (mi + 1) % msgs.length; msgEl.textContent = msgs[mi]; }, 1800);
+
+  fetch('/analyze', { method: 'POST', body: form })
+    .then(r => r.json())
     .then(data => {
-        document.getElementById('spinnerAnalyze').style.display = 'none';
-        document.getElementById('status').style.display = 'block';
-        document.getElementById('showChart').style.display = 'inline-block';
+      clearInterval(msgTimer);
+      document.getElementById('spinnerAnalyze').style.display = 'none';
+      analyzeBtn.disabled = false;
+      renderResults(data);
+    })
+    .catch(err => {
+      clearInterval(msgTimer);
+      document.getElementById('spinnerAnalyze').style.display = 'none';
+      analyzeBtn.disabled = false;
+      toast('Error: ' + err.message);
     });
-});
+}
 
-document.getElementById('showChart').addEventListener('click', () => {
-    // Show chart spinner
-    document.getElementById('spinnerChart').style.display = 'block';
-    document.getElementById('visual').style.display = 'none';
+// ── Render results ────────────────────────────────────────────────────────────
+function renderResults(data) {
+  const tbody = document.getElementById('resultsBody');
+  tbody.innerHTML = '';
 
-    fetch('/visualize')
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('spinnerChart').style.display = 'none';
-            const ctx = document.getElementById('visual').getContext('2d');
-            document.getElementById('visual').style.display = 'block';
+  data.forEach((row, i) => {
+    const conf = row.confidence || 0;
+    const confClass = conf >= 55 ? 'conf-high' : conf >= 35 ? 'conf-mid' : 'conf-low';
+    const reason = (row.reason || '').replace('Matched keywords: ', '');
 
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(data),
-                    datasets: [{
-                        label: 'Number of Candidates',
-                        data: Object.values(data),
-                        backgroundColor: 'cornflowerblue'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: 'Resume Classification Results' }
-                    }
-                }
-            });
-        });
-});
+    // Top-3 list HTML
+    const top3HTML = (row.top3 || []).map(t =>
+      `<div>${t.role} <b style="color:var(--primary)">${t.confidence}%</b></div>`
+    ).join('');
 
-function downloadCSV() {
-    window.location.href = '/download';
+    tbody.innerHTML += `
+      <tr>
+        <td style="color:var(--muted); font-size:0.82rem;">${i + 1}</td>
+        <td style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${row.filename}">${row.filename}</td>
+        <td><span class="role-badge">${row.category}</span></td>
+        <td><span class="conf-pill ${confClass}">${conf}%</span></td>
+        <td style="color:var(--muted); font-size:0.8rem; max-width:220px;">${reason || '—'}</td>
+        <td>
+          <button class="top3-btn" onclick="toggleTop3(this)">show ▾</button>
+          <div class="top3-list">${top3HTML}</div>
+        </td>
+      </tr>`;
+  });
+
+  // Summary stats
+  const total = data.length;
+  const roles = new Set(data.map(r => r.category)).size;
+  const avgConf = total
+    ? Math.round(data.reduce((s, r) => s + (r.confidence || 0), 0) / total)
+    : 0;
+
+  document.getElementById('statTotal').textContent   = total;
+  document.getElementById('statRoles').textContent   = roles;
+  document.getElementById('statAvgConf').textContent = avgConf + '%';
+
+  document.getElementById('summaryBar').style.display = 'flex';
+  document.getElementById('resultsWrap').style.display = 'block';
+}
+
+function toggleTop3(btn) {
+  const list = btn.nextElementSibling;
+  list.classList.toggle('open');
+  btn.textContent = list.classList.contains('open') ? 'hide ▴' : 'show ▾';
+}
+
+// ── Chart ─────────────────────────────────────────────────────────────────────
+function showChart() {
+  document.getElementById('spinnerChart').style.display = 'flex';
+  document.getElementById('chartSection').style.display = 'none';
+
+  fetch('/visualize')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('spinnerChart').style.display = 'none';
+
+      if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+      const labels = Object.keys(data);
+      const values = Object.values(data);
+
+      // Generate colors — one per bar, cycling through a palette
+      const palette = [
+        '#4361ee','#3a86ff','#8338ec','#06d6a0','#f4a261',
+        '#e63946','#118ab2','#ffd166','#2dc653','#ff6b6b'
+      ];
+      const colors = labels.map((_, i) => palette[i % palette.length]);
+
+      const ctx = document.getElementById('chartCanvas').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Number of Candidates',
+            data: values,
+            backgroundColor: colors,
+            borderRadius: 6,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: {
+              display: true,
+              text: 'Resume Classification — Role Distribution',
+              font: { size: 14, weight: '600' },
+              color: '#1e293b',
+              padding: { bottom: 16 }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.parsed.y} resume${ctx.parsed.y !== 1 ? 's' : ''}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                autoSkip: false,
+                maxRotation: 40,
+                font: { size: 11 },
+                color: '#64748b'
+              },
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1,
+                color: '#64748b',
+                font: { size: 11 }
+              },
+              grid: { color: '#e2e8f0' }
+            }
+          }
+        }
+      });
+
+      document.getElementById('chartSection').style.display = 'block';
+      document.getElementById('chartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    })
+    .catch(err => {
+      document.getElementById('spinnerChart').style.display = 'none';
+      toast('Chart error: ' + err.message);
+    });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function downloadCSV() { window.location.href = '/download'; }
+
+function clearAll() {
+  fileInput.value = '';
+  fileList.innerHTML = '';
+  analyzeBtn.disabled = true;
+  document.getElementById('resultsWrap').style.display = 'none';
+  document.getElementById('chartSection').style.display = 'none';
+  document.getElementById('summaryBar').style.display = 'none';
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
 }
 </script>
-
 </body>
 </html>
