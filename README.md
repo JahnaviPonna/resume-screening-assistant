@@ -1,52 +1,294 @@
-# Resume Classification using Semantic Similarity
+# 📄 Resume Screening Assistant
 
-This project is a Resume Classification tool that leverages semantic embeddings to automatically classify uploaded resumes into predefined job roles based on their content. It uses Sentence Transformers for text embeddings, fuzzy string matching for keyword detection, and visualizations for analysis.
+An AI-powered web application that automatically analyzes uploaded resumes and predicts the most suitable job role using semantic similarity, keyword matching, and job title detection.
+
+The application supports PDF and Word documents, including scanned PDFs through OCR, and provides confidence scores, matched keywords, top role predictions, and downloadable CSV reports.
 
 ---
 
 ## 🚀 Features
 
-- Upload multiple resumes in PDF format.
-- Extract and preprocess text from PDFs.
-- Use SentenceTransformer to semantically match resumes to job roles.
-- Identify matched keywords using fuzzy matching.
-- Visualize classified results in a bar chart.
-- Export classification results to CSV.
+- Upload one or multiple resumes
+- Supports **PDF**, **DOCX**, and **DOC** files
+- OCR support for scanned/image-based PDFs
+- Predicts among **20 different job roles**
+- Displays:
+  - Predicted job role
+  - Confidence score
+  - Matched keywords
+  - Top 3 closest role matches
+- Interactive bar chart showing role distribution
+- Export classification results as CSV
+- Marks low-confidence resumes as **Unclassified**
 
 ---
 
-## 🛠️ Technologies Used
+## 🧠 Classification Method
+
+The prediction combines three different signals:
+
+| Method | Weight |
+|----------|---------|
+| Semantic Similarity (Sentence Transformers) | 60% |
+| Keyword Matching | 30% |
+| Job Title Alias Detection | 10% |
+
+The application uses the **all-mpnet-base-v2** Sentence Transformer model to compare resume content with predefined job role descriptions.
+
+---
+
+# 📂 Project Structure
+
+```
+Resume_screening_assistant/
+│
+├── app.py
+├── requirements.txt
+├── uploads/
+├── templates/
+│   └── index.html
+└── README.md
+```
+
+> **Note:** `index.html` must be inside the `templates` folder.
+
+---
+
+# 💻 Requirements
+
+- Python 3.9+
+- Windows/Linux/macOS
+- pip
+- Tesseract OCR (for scanned PDFs)
+- Internet connection (first run only)
+
+---
+
+# ⚙️ Installation
+
+## 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd Resume_screening_assistant
+```
+
+---
+
+## 2. Create a Virtual Environment (Recommended)
+
+### Windows
+
+```powershell
+python -m venv venv
+venv\Scripts\activate
+```
+
+### Linux/macOS
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+---
+
+## 3. Install Tesseract OCR
+
+Download and install:
+
+https://github.com/UB-Mannheim/tesseract/wiki
+
+After installation, verify:
+
+```bash
+tesseract --version
+```
+
+---
+
+## 4. Install PyTorch (CPU)
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+```
+
+---
+
+## 5. Install Project Dependencies
+
+Using requirements file:
+
+```bash
+pip install -r requirements.txt
+```
+
+or install manually:
+
+```bash
+pip install flask sentence-transformers pandas pdfplumber PyMuPDF pytesseract Pillow python-docx fuzzywuzzy python-Levenshtein
+```
+
+---
+
+## 6. Run the Application
+
+```bash
+python app.py
+```
+
+The first launch downloads the Sentence Transformer model (~420 MB).
+
+Open your browser:
+
+```
+http://127.0.0.1:5000
+```
+
+---
+
+# 📁 Supported Resume Formats
+
+| Format | Support |
+|----------|----------|
+| PDF | ✅ Text PDFs |
+| Scanned PDF | ✅ OCR |
+| DOCX | ✅ |
+| DOC | ✅ |
+
+---
+
+# 🎯 Supported Job Roles
+
+The classifier predicts the following roles:
+
+- Software Developer
+- Web Developer
+- Data Scientist
+- AI/ML Engineer
+- DevOps Engineer
+- Cloud Engineer
+- Data Analyst
+- Database Administrator
+- Software Tester / QA
+- UI/UX Designer
+- Cybersecurity Analyst
+- Network Engineer
+- Embedded Engineer
+- VLSI Design Engineer
+- Mechanical Engineer
+- Electrical Engineer
+- Business Analyst
+- Research Scientist
+- Technical Writer
+- Product Manager
+
+If a resume does not match any role with sufficient confidence, it is classified as **Unclassified**.
+
+---
+
+# 📊 Output
+
+For every uploaded resume, the application provides:
+
+- Predicted Job Role
+- Confidence Score
+- Matched Keywords
+- Top 3 Similar Roles
+- CSV Export
+- Role Distribution Chart
+
+---
+
+# 🛠 Technologies Used
 
 - Python
-- Google Colab
-- PyPDF2
+- Flask
+- Sentence Transformers (`all-mpnet-base-v2`)
+- PyTorch
+- pdfplumber
+- PyMuPDF
+- pytesseract
+- Pillow
+- python-docx
 - pandas
-- sentence-transformers
 - fuzzywuzzy
-- matplotlib
+- Bootstrap 5
+- Chart.js
 
 ---
 
-## 📊 Output
-A bar chart displaying how many resumes match each job role.
+# 📦 Project Files
 
-CSV file showing filename and predicted job role for each resume.
-
----
-
-## ✅ Future Enhancements
-Add support for DOCX files.
-
-Use advanced NLP techniques for better classification.
-
-Deploy as a web application using Streamlit or Flask.
+| File | Description |
+|------|-------------|
+| `app.py` | Flask backend and classification logic |
+| `templates/index.html` | Frontend user interface |
+| `requirements.txt` | Project dependencies |
+| `uploads/` | Stores uploaded resumes temporarily |
+| `resume_classification.csv` | Generated classification results |
 
 ---
 
-## 🌐 Live Demo
-https://jahnaviponna.github.io/resume-screening-assistant/
+# ❗ Troubleshooting
+
+### Tesseract not recognized
+
+Ensure Tesseract is installed and added to your system PATH.
+
+Verify:
+
+```bash
+tesseract --version
+```
 
 ---
 
-## 👤 Author
-Developed by: P Jahnavi Sushma Priya
+### Missing Python Package
+
+Install dependencies again:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+### TemplateNotFound Error
+
+Ensure the folder structure is:
+
+```
+templates/
+    index.html
+```
+
+---
+
+### Port Already in Use
+
+Change the port inside `app.py`:
+
+```python
+app.run(debug=True, port=8000)
+```
+
+Then open:
+
+```
+http://127.0.0.1:8000
+```
+
+---
+
+### First Run is Slow
+
+This is expected. The AI model is downloaded and cached during the first execution.
+
+---
+
+# 👩‍💻 Author
+
+**Jahnavi Sushma Priya Ponna**
+
+📧 Email: **jahnavispponna@gmail.com**
